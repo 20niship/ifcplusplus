@@ -1850,7 +1850,7 @@ mz_ulong mz_crc32(mz_ulong crc, const mz_uint8 *ptr, size_t buf_len);
 #else
 /* Faster, but larger CPU cache footprint.
  */
-mz_ulong mz_crc32(mz_ulong crc, const mz_uint8 *ptr, size_t buf_len) {
+inline mz_ulong mz_crc32(mz_ulong crc, const mz_uint8 *ptr, size_t buf_len) {
   static const mz_uint32 s_crc_table[256] = {
       0x00000000, 0x77073096, 0xEE0E612C, 0x990951BA, 0x076DC419, 0x706AF48F,
       0xE963A535, 0x9E6495A3, 0x0EDB8832, 0x79DCB8A4, 0xE0D5E91E, 0x97D2D988,
@@ -1920,16 +1920,16 @@ mz_ulong mz_crc32(mz_ulong crc, const mz_uint8 *ptr, size_t buf_len) {
 
 void mz_free(void *p) { MZ_FREE(p); }
 
-MINIZ_EXPORT void *miniz_def_alloc_func(void *opaque, size_t items,
+MINIZ_EXPORT inline void *miniz_def_alloc_func(void *opaque, size_t items,
                                         size_t size) {
   (void)opaque, (void)items, (void)size;
   return MZ_MALLOC(items * size);
 }
-MINIZ_EXPORT void miniz_def_free_func(void *opaque, void *address) {
+MINIZ_EXPORT inline void miniz_def_free_func(void *opaque, void *address) {
   (void)opaque, (void)address;
   MZ_FREE(address);
 }
-MINIZ_EXPORT void *miniz_def_realloc_func(void *opaque, void *address,
+MINIZ_EXPORT inline void *miniz_def_realloc_func(void *opaque, void *address,
                                           size_t items, size_t size) {
   (void)opaque, (void)address, (void)items, (void)size;
   return MZ_REALLOC(address, items * size);
@@ -4198,7 +4198,7 @@ extern "C" {
   }                                                                            \
   MZ_MACRO_END
 
-tinfl_status tinfl_decompress(tinfl_decompressor *r,
+inline tinfl_status tinfl_decompress(tinfl_decompressor *r,
                               const mz_uint8 *pIn_buf_next,
                               size_t *pIn_buf_size, mz_uint8 *pOut_buf_start,
                               mz_uint8 *pOut_buf_next, size_t *pOut_buf_size,
@@ -5931,7 +5931,7 @@ mz_bool mz_zip_reader_init_file(mz_zip_archive *pZip, const char *pFilename,
   return mz_zip_reader_init_file_v2(pZip, pFilename, flags, 0, 0);
 }
 
-mz_bool mz_zip_reader_init_file_v2(mz_zip_archive *pZip, const char *pFilename,
+inline mz_bool mz_zip_reader_init_file_v2(mz_zip_archive *pZip, const char *pFilename,
                                    mz_uint flags, mz_uint64 file_start_ofs,
                                    mz_uint64 archive_size) {
   mz_uint64 file_size;
@@ -6088,7 +6088,7 @@ static MZ_FORCEINLINE const mz_uint8 *mz_zip_get_cdh(mz_zip_archive *pZip,
                            file_index));
 }
 
-mz_bool mz_zip_reader_is_file_encrypted(mz_zip_archive *pZip,
+inline mz_bool mz_zip_reader_is_file_encrypted(mz_zip_archive *pZip,
                                         mz_uint file_index) {
   mz_uint m_bit_flag;
   const mz_uint8 *p = mz_zip_get_cdh(pZip, file_index);
@@ -6103,7 +6103,7 @@ mz_bool mz_zip_reader_is_file_encrypted(mz_zip_archive *pZip,
            MZ_ZIP_GENERAL_PURPOSE_BIT_FLAG_USES_STRONG_ENCRYPTION)) != 0;
 }
 
-mz_bool mz_zip_reader_is_file_supported(mz_zip_archive *pZip,
+inline mz_bool mz_zip_reader_is_file_supported(mz_zip_archive *pZip,
                                         mz_uint file_index) {
   mz_uint bit_flag;
   mz_uint method;
@@ -6136,7 +6136,7 @@ mz_bool mz_zip_reader_is_file_supported(mz_zip_archive *pZip,
   return MZ_TRUE;
 }
 
-mz_bool mz_zip_reader_is_file_a_directory(mz_zip_archive *pZip,
+inline mz_bool mz_zip_reader_is_file_a_directory(mz_zip_archive *pZip,
                                           mz_uint file_index) {
   mz_uint filename_len, attribute_mapping_id, external_attr;
   const mz_uint8 *p = mz_zip_get_cdh(pZip, file_index);
@@ -6385,7 +6385,7 @@ int mz_zip_reader_locate_file(mz_zip_archive *pZip, const char *pName,
     return (int)index;
 }
 
-mz_bool mz_zip_reader_locate_file_v2(mz_zip_archive *pZip, const char *pName,
+inline mz_bool mz_zip_reader_locate_file_v2(mz_zip_archive *pZip, const char *pName,
                                      const char *pComment, mz_uint flags,
                                      mz_uint32 *pIndex) {
   mz_uint file_index;
@@ -6617,7 +6617,7 @@ static mz_bool mz_zip_reader_extract_to_mem_no_alloc1(
   return status == TINFL_STATUS_DONE;
 }
 
-mz_bool mz_zip_reader_extract_to_mem_no_alloc(mz_zip_archive *pZip,
+inline mz_bool mz_zip_reader_extract_to_mem_no_alloc(mz_zip_archive *pZip,
                                               mz_uint file_index, void *pBuf,
                                               size_t buf_size, mz_uint flags,
                                               void *pUser_read_buf,
@@ -9962,7 +9962,7 @@ mz_zip_error mz_zip_get_last_error(mz_zip_archive *pZip) {
   return prev_err;
 }
 
-const char *mz_zip_get_error_string(mz_zip_error mz_err) {
+inline const char *mz_zip_get_error_string(mz_zip_error mz_err) {
   switch (mz_err) {
   case MZ_ZIP_NO_ERROR:
     return "no error";
@@ -10102,7 +10102,7 @@ mz_uint mz_zip_reader_get_filename(mz_zip_archive *pZip, mz_uint file_index,
   return n + 1;
 }
 
-mz_bool mz_zip_reader_file_stat(mz_zip_archive *pZip, mz_uint file_index,
+inline mz_bool mz_zip_reader_file_stat(mz_zip_archive *pZip, mz_uint file_index,
                                 mz_zip_archive_file_stat *pStat) {
   return mz_zip_file_stat_internal(
       pZip, file_index, mz_zip_get_cdh(pZip, file_index), pStat, NULL);
