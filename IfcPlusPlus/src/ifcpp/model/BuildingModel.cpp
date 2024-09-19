@@ -301,7 +301,7 @@ void BuildingModel::insertEntity( shared_ptr<BuildingEntity> e, bool overwrite_e
 		return;
 	}
 	int tag = e->m_tag;
-	if( tag < 0 )
+	if( tag <= 0 )
 	{
 		int next_unused_id = getNextUnusedEntityTagFast();
 		e->m_tag = next_unused_id;
@@ -406,8 +406,8 @@ int BuildingModel::getNextUnusedEntityTagFast()
 {
 	if( m_map_entities.empty() )
 	{
-		m_max_entity_id = 0;
-		return 0;
+		m_max_entity_id = 1;
+		return 1;
 	}
 
 	int next_unused_id = m_max_entity_id + 1;
@@ -442,10 +442,10 @@ int BuildingModel::getLowestUnusedEntityTagSlow()
 {
 	if (m_map_entities.empty())
 	{
-		return 0;
+		return 1;
 	}
 
-	m_max_entity_id = 0;
+	m_max_entity_id = 1;
 	for (auto it = m_map_entities.begin(); it != m_map_entities.end(); ++it)
 	{
 		int tag = it->first;
@@ -621,7 +621,7 @@ void BuildingModel::updateCache()
 	{
 		int tag = it->first;
 		shared_ptr<BuildingEntity> obj = it->second;
-		if( obj->classID() == IFC4X3::IFCPROJECT )
+		if( obj->classID() == IFCPROJECT )
 		{
 			if( m_ifc_project )
 			{
@@ -642,7 +642,7 @@ void BuildingModel::updateCache()
 				std::cout << "BuildingModel::updateCache: IfcProject found but dynamic_cast failed. Is RTTI enabled?" << std::endl;
 			}
 		}
-		else if( obj->classID() == IFC4X3::IFCGEOMETRICREPRESENTATIONCONTEXT )
+		else if( obj->classID() == IFCGEOMETRICREPRESENTATIONCONTEXT )
 		{
 			shared_ptr<IfcGeometricRepresentationContext> context = dynamic_pointer_cast<IfcGeometricRepresentationContext>(obj);
 			if( context )
