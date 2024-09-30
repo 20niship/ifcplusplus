@@ -1,6 +1,11 @@
 cmake_minimum_required (VERSION 3.6...3.9)
 project(IfcPlusPlus)
 
+find_package(TBB QUIET)
+if(TBB_FOUND)
+  link_libraries(TBB::tbb)
+endif()
+
 ADD_DEFINITIONS(-DIFCQUERY_STATIC_LIB)
 ADD_DEFINITIONS(-D_HAS_AUTO_PTR_ETC=1)
 ADD_DEFINITIONS(-DUNICODE)
