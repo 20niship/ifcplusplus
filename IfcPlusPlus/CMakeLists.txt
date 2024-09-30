@@ -103,6 +103,8 @@ if(WIN32)
     set_target_properties(IfcPlusPlus PROPERTIES LINK_FLAGS_DEBUG "/debug /INCREMENTAL:NO")
 	add_definitions("/wd4018 /wd4305")
 	target_compile_options(IfcPlusPlus PRIVATE /W2)
+else()
+  target_compile_options(IfcPlusPlus PUBLIC -Wno-narrowing -Wno-deprecated-declarations)
 endif()
 
 install(
