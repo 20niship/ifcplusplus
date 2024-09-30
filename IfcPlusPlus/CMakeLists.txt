@@ -114,6 +114,7 @@ endif()
 
 install(
     DIRECTORY   src/ifcpp
+    EXPORT  IfcPlusPlus
     DESTINATION include
     FILES_MATCHING PATTERN "*.h"
 )
@@ -121,20 +122,14 @@ install(
     TARGETS IfcPlusPlus
     EXPORT  IfcPlusPlus
     RUNTIME DESTINATION bin
-    LIBRARY DESTINATION bin
-    ARCHIVE DESTINATION bin
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION lib
 )
 
-set(target_output_filename IfcPlusPlus-targets.cmake)
-set(target_output "${CMAKE_BINARY_DIR}/cmake/${target_output_filename}")
+install(EXPORT IfcPlusPlus
+  FILE IfcPlusPlusConfig.cmake
+  DESTINATION lib/cmake/IfcPlusPlus
+  NAMESPACE IFCPP::
+  EXPORT_LINK_INTERFACE_LIBRARIES
+)
 
-export(
-  EXPORT IfcPlusPlus
-  FILE ${target_output}
-  NAMESPACE IFCPP::)
-
-install(
-  EXPORT IfcPlusPlus
-  DESTINATION ${IFCPP_CONFIG_DIR}
-  FILE ${target_output_filename}
-  NAMESPACE IFCPP::)
