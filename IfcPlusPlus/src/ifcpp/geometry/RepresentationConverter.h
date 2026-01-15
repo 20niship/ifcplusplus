@@ -292,7 +292,7 @@ public:
 					if( it_cache != m_representationMapCache.end() )
 					{
 						// Cache hit: reuse existing geometry by deep copying
-						shared_ptr<ItemShapeData>& cached_data = it_cache->second;
+						const shared_ptr<ItemShapeData>& cached_data = it_cache->second;
 						if( cached_data )
 						{
 							mapped_input_data->copyFrom( cached_data );
@@ -309,9 +309,10 @@ public:
 						convertIfcRepresentation( mapped_representation, mapped_input_data, cacheIfcItems);
 						
 						// Store in cache for future reuse (only if caching is enabled and we have a valid map_id)
+						// Important: Cache is stored BEFORE applying instance-specific transformations
 						if( m_enableRepresentationMapCaching && map_id > 0 )
 						{
-							// Create a deep copy to store in cache (original geometry without instance transforms)
+							// Create a deep copy to store in cache (base geometry without instance transforms)
 							shared_ptr<ItemShapeData> cache_copy( new ItemShapeData() );
 							cache_copy->copyFrom( mapped_input_data );
 							m_representationMapCache[map_id] = cache_copy;
@@ -345,6 +346,8 @@ public:
 					}
 				}
 
+				// Apply instance-specific transformation (both for cached and newly converted geometry)
+				// This ensures transformations are applied correctly regardless of cache status
 				if( map_matrix_origin && map_matrix_target )
 				{
 					carve::math::Matrix mapped_pos(map_matrix_target->m_matrix*map_matrix_origin->m_matrix);
