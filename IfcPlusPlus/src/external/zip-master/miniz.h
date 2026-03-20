@@ -6924,8 +6924,7 @@ inline mz_bool mz_zip_reader_extract_file_to_callback(mz_zip_archive *pZip,
                                            flags);
 }
 
-inline mz_zip_reader_extract_iter_state *
-inline mz_zip_reader_extract_iter_new(mz_zip_archive *pZip, mz_uint file_index,
+inline mz_zip_reader_extract_iter_state *mz_zip_reader_extract_iter_new(mz_zip_archive *pZip, mz_uint file_index,
                                mz_uint flags) {
   mz_zip_reader_extract_iter_state *pState;
   mz_uint32
@@ -7061,8 +7060,7 @@ inline mz_zip_reader_extract_iter_new(mz_zip_archive *pZip, mz_uint file_index,
   return pState;
 }
 
-inline mz_zip_reader_extract_iter_state *
-inline mz_zip_reader_extract_file_iter_new(mz_zip_archive *pZip, const char *pFilename,
+inline mz_zip_reader_extract_iter_state *mz_zip_reader_extract_file_iter_new(mz_zip_archive *pZip, const char *pFilename,
                                     mz_uint flags) {
   mz_uint32 file_index;
 
