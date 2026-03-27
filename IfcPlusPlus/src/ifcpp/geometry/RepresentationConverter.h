@@ -95,6 +95,10 @@ class RepresentationConverter : public StatusCallback
 	std::map<int, shared_ptr<ItemCacheContainer> > m_itemCache;
 	bool m_geometricItemCaching = false;
 	
+	// Cache for IfcRepresentationMap-based instancing optimization
+	std::map<int, shared_ptr<ItemShapeData> > m_representationMapCache;
+	bool m_enableRepresentationMapCaching = true;
+	
 public:
 	RepresentationConverter( shared_ptr<GeometrySettings> geom_settings, shared_ptr<UnitConverter> unit_converter )
 		: m_geom_settings( geom_settings ), m_unit_converter( unit_converter )
@@ -130,6 +134,7 @@ public:
 	{
 		m_profile_cache->clearProfileCache();
 		m_styles_converter->clearStylesCache();
+		m_representationMapCache.clear();
 	}
 	shared_ptr<GeometrySettings>&		getGeomSettings()	{ return m_geom_settings; }
 	shared_ptr<UnitConverter>&			getUnitConverter() { return m_unit_converter; }
@@ -151,6 +156,12 @@ public:
 		m_placement_converter->m_unit_converter = unit_converter;
 		m_face_converter->m_unit_converter = unit_converter;
 	}
+
+	// RepresentationMap caching control methods for instanced rendering optimization
+	void setRepresentationMapCachingEnabled( bool enable ) { m_enableRepresentationMapCaching = enable; }
+	bool isRepresentationMapCachingEnabled() const { return m_enableRepresentationMapCaching; }
+	size_t getRepresentationMapCacheSize() const { return m_representationMapCache.size(); }
+	void clearRepresentationMapCache() { m_representationMapCache.clear(); }
 
 	//void convertRepresentationStyle( const shared_ptr<IfcRepresentationItem>& representation_item, std::vector<shared_ptr<StyleData> >& vec_style_data )
 	//{
@@ -271,17 +282,50 @@ public:
 				shared_ptr<ItemShapeData> mapped_input_data( new ItemShapeData() );
 				mapped_input_data->m_ifc_representation = mapped_representation;
 
-				try
+				// Instanced rendering optimization: check cache for existing geometry based on RepresentationMap ID
+				int map_id = map_source->m_tag;
+				bool use_cached_geometry = false;
+				
+				if( m_enableRepresentationMapCaching && map_id > 0 )
 				{
-					convertIfcRepresentation( mapped_representation, mapped_input_data, cacheIfcItems);
+					auto it_cache = m_representationMapCache.find( map_id );
+					if( it_cache != m_representationMapCache.end() )
+					{
+						// Cache hit: reuse existing geometry by deep copying
+						const shared_ptr<ItemShapeData>& cached_data = it_cache->second;
+						if( cached_data )
+						{
+							mapped_input_data->copyFrom( cached_data );
+							use_cached_geometry = true;
+						}
+					}
 				}
-				catch( BuildingException& e )
+
+				// If not cached, perform full geometry conversion
+				if( !use_cached_geometry )
 				{
-					messageCallback( e.what(), StatusCallback::MESSAGE_TYPE_ERROR, "" );
-				}
-				catch( std::exception& e )
-				{
-					messageCallback( e.what(), StatusCallback::MESSAGE_TYPE_ERROR, __FUNC__ );
+					try
+					{
+						convertIfcRepresentation( mapped_representation, mapped_input_data, cacheIfcItems);
+						
+						// Store in cache for future reuse (only if caching is enabled and we have a valid map_id)
+						// Important: Cache is stored BEFORE applying instance-specific transformations
+						if( m_enableRepresentationMapCaching && map_id > 0 )
+						{
+							// Create a deep copy to store in cache (base geometry without instance transforms)
+							shared_ptr<ItemShapeData> cache_copy( new ItemShapeData() );
+							cache_copy->copyFrom( mapped_input_data );
+							m_representationMapCache[map_id] = cache_copy;
+						}
+					}
+					catch( BuildingException& e )
+					{
+						messageCallback( e.what(), StatusCallback::MESSAGE_TYPE_ERROR, "" );
+					}
+					catch( std::exception& e )
+					{
+						messageCallback( e.what(), StatusCallback::MESSAGE_TYPE_ERROR, __FUNC__ );
+					}
 				}
 
 				if( m_geom_settings->handleStyledItems() )
@@ -302,6 +346,8 @@ public:
 					}
 				}
 
+				// Apply instance-specific transformation (both for cached and newly converted geometry)
+				// This ensures transformations are applied correctly regardless of cache status
 				if( map_matrix_origin && map_matrix_target )
 				{
 					carve::math::Matrix mapped_pos(map_matrix_target->m_matrix*map_matrix_origin->m_matrix);
